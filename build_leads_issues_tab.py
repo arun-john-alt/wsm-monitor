@@ -102,7 +102,8 @@ for (c, p) in order:
     for ci in range(1, NC+1): ws.cell(r, ci).fill = GREY; ws.cell(r, ci).font = CALB
     ws.cell(r, 1, d); ws.cell(r, 2, c); ws.cell(r, 3, p); ws.cell(r, 4, '■ ALL THEMES (product)')
     dc = ws.cell(r, 5); dc.value = valpct(round(pmay), pyoyp, bold=True); dc.alignment = CEN   # E = YoY%
-    dc.fill = GREEN if (pyoyp is not None and pyoyp >= DEADBAND) else (RED if (pyoyp is None or pyoyp <= -DEADBAND) else None)
+    _fc = GREEN if (pyoyp is not None and pyoyp >= DEADBAND) else (RED if (pyoyp is not None and pyoyp <= -DEADBAND) else None)
+    if _fc: dc.fill = _fc   # leave GREY (set above) when within dead-band or no prior-year data
     gc = ws.cell(r, 6); gc.value = engcell(pg, pgb); gc.alignment = CEN
     bc = ws.cell(r, 7); bc.value = engcell(pb, pbb); bc.alignment = CEN
     ws.cell(r, 8, round(pbase, 1)).alignment = CEN
