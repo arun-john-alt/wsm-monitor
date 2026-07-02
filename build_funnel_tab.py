@@ -32,7 +32,10 @@ def inr(v):
     return f'₹{v:.0f}'
 def disp(metric, v): return f'{v:,.0f}' if metric in ('Leads', 'Clicks') else inr(v)
 
-wb = load_workbook(OUT, rich_text=True); src = wb[CUR_LABEL]
+wb = load_workbook(OUT, rich_text=True)
+if CUR_LABEL not in wb.sheetnames:
+    raise SystemExit(f"[abort] Tab '{CUR_LABEL}' not found in {OUT} — run build_monitor_cells.py first to initialise the workbook")
+src = wb[CUR_LABEL]
 order = []; contrib = {}; seen = set()
 for r in range(2, src.max_row+1):
     k = (src.cell(r, 1).value, src.cell(r, 2).value, src.cell(r, 3).value)

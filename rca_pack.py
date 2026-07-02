@@ -1,7 +1,8 @@
 """Assemble an RCA data-pack for one unit (country [+ product]). Pulls, for the down themes:
 leads (engine split, YoY), impression share (IS / lost-to-rank / lost-to-budget), clicks/cost/CPL,
-search-volume trend (demand), and change-history actions. Prints a structured brief (JSON) that
-feeds the one-page RCA. Auction insights omitted (table empty). Usage:
+and change-history actions. Prints a structured brief (JSON) that feeds the one-page RCA.
+Note: search volume (adg_keyword_universe) removed — that table sums the full keyword universe
+which grows monthly, producing artifacts. Auction insights omitted (table empty). Usage:
   python rca_pack.py --country "United States" --product ADAP"""
 import argparse, json, os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -47,12 +48,6 @@ for r in q(f"""SELECT theme, COUNT(*) n, ROUND(AVG(SAFE_DIVIDE(new_cpc-old_cpc,o
     AND old_cpc>0 AND new_cpc<old_cpc GROUP BY 1"""):
     CPC[r.theme]=(r.n, r.avg_pct)
 
-# --- search volume trend by theme (adg_keyword_universe) ---
-SV={}
-for r in q(f"""SELECT theme, FORMAT_DATE('%Y-%m', period) ym, ROUND(SUM(search_volume),0) sv
-  FROM `{G}.adg_keyword_universe` WHERE country='{C}' {pf} AND period>='2025-11-01' GROUP BY 1,2"""):
-    SV[(r.theme,r.ym)]=r.sv or 0
-
 # --- assemble brief ---
 prod_may=sum(v(L,t,CUR) for t in themes); prod_base=sum(a3(L,t) for t in themes); prod_yoy=sum(v(L,t,YOY) for t in themes)
 brief={'unit':f'{C}'+(f' / {P}' if P else ''), 'month':CUR,
@@ -61,7 +56,6 @@ brief={'unit':f'{C}'+(f' / {P}' if P else ''), 'month':CUR,
   'down_themes':[]}
 for t,may,base,lost in down:
     rc=R.get((t,CUR)); rp=R.get((t,PRI))
-    sv_may=SV.get((t,CUR),0); sv_base=sum(SV.get((t,m),0) for m in BASE)/3.0
     d={'theme':t,
        'leads':{'may':round(may),'avg3':round(base,1),'vs_avg_pct':pc(may,base),'yoy_pct':pc(may,v(L,t,YOY)),
                 'google':round(v(GL,t,CUR)),'bing':round(v(BL,t,CUR)),
@@ -72,7 +66,6 @@ for t,may,base,lost in down:
        'traffic':{'clicks_may':int(rc.clicks) if rc else None,'clicks_apr':int(rp.clicks) if rp else None,
                 'ctr_may_pct':round((rc.ctr or 0)*100,1) if rc else None,'ctr_apr_pct':round((rp.ctr or 0)*100,1) if rp else None,
                 'cpl_may':round((rc.cost or 0)/may) if (rc and may) else None},
-       'search_volume':{'may':round(sv_may),'avg3':round(sv_base),'vs_avg_pct':pc(sv_may,sv_base)},
        'change_history':CH.get(t,[]), 'cpc_cuts':CPC.get(t)}
     brief['down_themes'].append(d)
 print(json.dumps(brief, indent=1, default=str))
