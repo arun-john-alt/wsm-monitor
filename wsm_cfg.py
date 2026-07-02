@@ -34,7 +34,7 @@ def month_end(ym):
     y, m = int(ym[:4]), int(ym[5:7])
     return f"{ym}-{calendar.monthrange(y, m)[1]:02d}"
 
-_m = _c['run']['month']
+_m = os.environ.get('WSM_MONTH') or _c['run']['month']   # env override (used by ui.py)
 if _m == 'auto':   # last complete calendar month
     t = date.today().replace(day=1)
     CUR = shift(f"{t.year}-{t.month:02d}", -1)

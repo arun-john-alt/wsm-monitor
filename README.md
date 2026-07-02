@@ -73,3 +73,12 @@ rca_pack.py/rca_pdf.py  # RCA data-pack + one-page PDF renderer
 sql/                 # BQ aggregate builders (dataset names + presales templated)
 legacy/              # superseded scripts kept for reference
 ```
+
+## Dashboard (on-demand runs)
+```bash
+python3 ui.py   # -> http://localhost:8787
+```
+Check data freshness, then click **Run Weekly Alerts** / **Run Monthly Report** — with month
+override and a force toggle for when you have verified the data externally. Live run log included.
+Built because source syncs have irregular external dependencies (leads feed can gap 1-9 days):
+human verifies, human clicks.
