@@ -57,8 +57,9 @@ for (c, p) in order:
     pb = sum(v(BL, k, CUR) for k in keys); pbb = sum(a3(BL, k) for k in keys)
     pyoyp = pctc(pmay, pyoy)
     gb = f"{TD}background:{GREY};font-weight:bold;"
+    _pf = (GREEN if pyoyp >= DEADBAND else (RED if pyoyp <= -DEADBAND else None)) if pyoyp is not None else None
     rows.append('<tr>' + ''.join(f'<td style="{gb}">{H.escape(str(x))}</td>' for x in [d, c, p, '■ ALL THEMES (product)'])
-        + valcell(round(pmay), pyoyp, GREEN if (pyoyp or 0) >= 0 else RED, bold=True)
+        + valcell(round(pmay), pyoyp, _pf, bold=True)
         + valcell(round(pg), pctc(pg, pgb), GREY) + valcell(round(pb), pctc(pb, pbb), GREY)
         + f'<td style="{gb}text-align:center">{pbase:.1f}</td>'
         + valcell('', pctc(pmay, pbase), GREY) + '</tr>')

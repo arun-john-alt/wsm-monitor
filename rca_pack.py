@@ -6,7 +6,7 @@ which grows monthly, producing artifacts. Auction insights omitted (table empty)
   python rca_pack.py --country "United States" --product ADAP"""
 import argparse, json, os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from wsm_cfg import PROJ, W, G, CUR, PRI, BASE, YOY, CH_START, CH_END, bq_client
+from wsm_cfg import W, G, CUR, PRI, BASE, YOY, CH_START, CH_END, bq_client, DECLINE, BASE_FLOOR, ABS_FLOOR
 
 ap=argparse.ArgumentParser(); ap.add_argument('--country',required=True); ap.add_argument('--product',default=None)
 a=ap.parse_args(); C=a.country; P=a.product
@@ -26,7 +26,7 @@ def pc(cur,base): return round((cur-base)/base*100) if base else None
 down=[]
 for t in themes:
     may=v(L,t,CUR); base=a3(L,t)
-    if base>=3 and may<=base*0.75 and (base-may)>=2:
+    if base >= BASE_FLOOR and may <= base*(1-DECLINE/100) and (base-may) >= ABS_FLOOR:
         down.append((t,may,base,base-may))
 down.sort(key=lambda x:-x[3]); down=down[:5]
 

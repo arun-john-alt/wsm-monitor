@@ -89,6 +89,9 @@ cells = {(r.product, r.country, r.theme): r.cell_text for r in df.itertuples()}
 shutil.copyfile(XLSX, OUT)
 wb = load_workbook(OUT, rich_text=True); ws = wb[TAB]
 hdr = {ws.cell(1, ci).value: ci for ci in range(1, ws.max_column+1)}
+for _col in ('Product', 'Country', 'Theme', 'Dec'):
+    if _col not in hdr:
+        raise SystemExit(f"[abort] column '{_col}' not found in tab '{TAB}' — workbook structure has changed")
 pi, ci_, ti = hdr['Product'], hdr['Country'], hdr['Theme']
 COL = hdr['Dec'] + 1   # column O, right after the Dec dot column
 ws.cell(1, COL, value=COL_HEADER)
