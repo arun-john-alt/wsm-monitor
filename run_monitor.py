@@ -14,6 +14,7 @@ ap = argparse.ArgumentParser()
 ap.add_argument('--mode', choices=['monthly', 'weekly'], default='monthly')
 ap.add_argument('--skip-sql', action='store_true')
 ap.add_argument('--only', choices=['sql', 'tabs'], default=None)
+ap.add_argument('--force', action='store_true', help='run even if freshness preflight FAILs')
 a = ap.parse_args()
 
 def run_sql(fname):
@@ -32,6 +33,10 @@ def run_py(fname):
 print("=" * 70)
 print(f"WSM Monitor [{a.mode}] — target month {cfg.CUR} ({cfg.CUR_LABEL})   write={cfg.W}")
 print("=" * 70)
+
+from check_freshness import run_checks
+if not run_checks(a.mode) and not a.force:
+    sys.exit("ABORTED: source data not fresh enough (see above). Use --force to override.")
 
 if a.mode == 'weekly':
     if not a.skip_sql:
