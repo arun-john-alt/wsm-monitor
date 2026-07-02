@@ -66,4 +66,9 @@ content={
  'footer':("Factors considered: leads (presales, US), impression share, search volume (Google, monthly), traffic/CTR/CPL, change history (to Jun 5). "
    "Auction insights pending data population. Search volume &amp; terms are Google-only. Source: Ads_data_WSM. Generated automatically."),
 }
-render_rca(content, '/Users/arun-8846/Downloads/Monitor/RCA/US_ADAP_May2026.pdf')
+if __name__ == '__main__':
+    import sys, os
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from wsm_cfg import RCA_DIR, CUR
+    os.makedirs(RCA_DIR, exist_ok=True)
+    render_rca(content, os.path.join(RCA_DIR, f'US_ADAP_{CUR}.pdf'))

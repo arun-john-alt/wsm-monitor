@@ -64,11 +64,11 @@ CH_START = f"{PRI}-01"
 CH_END   = month_end(CUR)
 CH_LABEL = f"{PRI_MON}–{CUR_MON}"   # e.g. 'Apr–May'
 
-# --- paths ---
-XLSX_SRC   = _c['paths']['workbook_src']
-OUT        = _c['paths']['workbook_out']
-RCA_DIR    = _c['paths']['rca_dir']
-WEEKLY_DIR = _c['paths']['weekly_dir']
+# --- paths (~ expands to home dir) ---
+XLSX_SRC   = os.path.expanduser(_c['paths']['workbook_src'])
+OUT        = os.path.expanduser(_c['paths']['workbook_out'])
+RCA_DIR    = os.path.expanduser(_c['paths']['rca_dir'])
+WEEKLY_DIR = os.path.expanduser(_c['paths']['weekly_dir'])
 
 # --- business config ---
 PRESALES_COUNTRIES = list(_c['presales_countries'])

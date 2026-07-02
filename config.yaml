@@ -12,10 +12,11 @@ run:
   trend_end: auto           # last month shown (auto = month after target, i.e. current partial)
 
 paths:
-  workbook_src: "/Users/arun-8846/Downloads/Monitor/Continuous Monitoring AKA Big Boss.xlsx"
-  workbook_out: "/Users/arun-8846/Downloads/Monitor/Continuous Monitoring AKA Big Boss - Monitor.xlsx"
-  rca_dir: "/Users/arun-8846/Downloads/Monitor/RCA"
-  weekly_dir: "/Users/arun-8846/Downloads/Monitor/Weekly"
+  # EDIT THESE for your machine. Use ~ for home dir. Run 'python wsm_cfg.py' to verify after.
+  workbook_src: "~/wsm-data/Continuous Monitoring AKA Big Boss.xlsx"   # the MASTER file (read-only)
+  workbook_out: "~/wsm-data/Continuous Monitoring AKA Big Boss - Monitor.xlsx"  # Monitor writes here
+  rca_dir:     "~/wsm-data/RCA"         # one-page PDFs land here (auto-created)
+  weekly_dir:  "~/wsm-data/Weekly"      # weekly alert digests (auto-created)
 
 # Leads metric by market (confirmed 2026-06-30):
 #   presales markets -> FS_PS_Leads (Lead_Type='Mktg(SPL)Leads')

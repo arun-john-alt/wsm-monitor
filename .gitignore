@@ -5,7 +5,7 @@ RCA/
 
 # secrets / local
 *.env
-*env.sh
+set_env.sh        # filled-in creds — never commit; copy from set_env.example.sh
 ZA.txt
 set_env*.ps1
 !set_env.example.ps1
