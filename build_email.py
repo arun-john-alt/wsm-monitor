@@ -118,5 +118,9 @@ outdir = os.path.join(os.path.dirname(WEEKLY_DIR), 'Email')
 os.makedirs(outdir, exist_ok=True)
 path = os.path.join(outdir, f'wsm_monthly_{CUR}.html')
 open(path, 'w').write(body)
+subject = f"WSM Monitor — {CUR_LABEL}: {n_issues} lead issues across {len({c for c, p in order})} countries"
+import json
+open(os.path.join(outdir, f'wsm_monthly_{CUR}.json'), 'w').write(json.dumps(dict(
+    subject=subject, to=EMAIL['to'], month=CUR, html=path)))
 print(f"[ok] email body -> {path}")
-print(f"     subject: WSM Monitor — {CUR_LABEL}: {n_issues} lead issues across {len({c for c,p in order})} countries | to: {EMAIL['to']}")
+print(f"     subject: {subject} | to: {EMAIL['to']}")
