@@ -13,13 +13,13 @@ Known feed behaviours (audited 2026-07-02):
 """
 import os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from wsm_cfg import G, CUR, month_end, bq_client
+from wsm_cfg import G, CUR, ACCT, month_end, bq_client
 from datetime import date, timedelta
 
 def run_checks(mode='monthly'):
     bq = bq_client()
     def one(sql): return list(bq.query(sql).result())[0].m
-    ads_max = one(f"SELECT MAX(segments_date) m FROM `{G}.ads_AdGroupBasicStats_5419501619`")
+    ads_max = one(f"SELECT MAX(segments_date) m FROM `{G}.ads_AdGroupBasicStats_{ACCT}`")
     ok = True
     print(f"[freshness] mode={mode}  target month={CUR}")
 

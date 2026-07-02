@@ -5,6 +5,7 @@ bigquery:
   project: it-security-online-marketing
   dataset: Ads_data_WSM                 # Monitor WRITES only here
   source_dataset: Google_ads_data_ajay  # READ-ONLY source (Big Boss / Data Transfer)
+  account_id: "5419501619"              # Google Ads account ID suffix in Data Transfer table names
 
 run:
   month: "2026-05"          # target month "YYYY-MM", or "auto" = last complete calendar month

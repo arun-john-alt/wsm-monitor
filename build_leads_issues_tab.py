@@ -5,7 +5,7 @@ Comments = spend/clicks always + CTR/IS when moved + change-history actions. All
 import os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from wsm_cfg import (W, G, OUT, CUR, YOY, BASE, CUR_MON, CH_START, CH_END, CH_LABEL,
-                     DECLINE, BASE_FLOOR, ABS_FLOOR, CG, dri, bq_client)
+                     DECLINE, BASE_FLOOR, ABS_FLOOR, DEADBAND, CG, dri, bq_client)
 from openpyxl import load_workbook
 from openpyxl.styles import Font, Alignment, PatternFill
 from openpyxl.cell.rich_text import CellRichText, TextBlock
@@ -102,7 +102,7 @@ for (c, p) in order:
     for ci in range(1, NC+1): ws.cell(r, ci).fill = GREY; ws.cell(r, ci).font = CALB
     ws.cell(r, 1, d); ws.cell(r, 2, c); ws.cell(r, 3, p); ws.cell(r, 4, '■ ALL THEMES (product)')
     dc = ws.cell(r, 5); dc.value = valpct(round(pmay), pyoyp, bold=True); dc.alignment = CEN   # E = YoY%
-    dc.fill = GREEN if (pyoyp is not None and pyoyp >= 0) else RED
+    dc.fill = GREEN if (pyoyp is not None and pyoyp >= DEADBAND) else (RED if (pyoyp is None or pyoyp <= -DEADBAND) else None)
     gc = ws.cell(r, 6); gc.value = engcell(pg, pgb); gc.alignment = CEN
     bc = ws.cell(r, 7); bc.value = engcell(pb, pbb); bc.alignment = CEN
     ws.cell(r, 8, round(pbase, 1)).alignment = CEN

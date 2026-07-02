@@ -16,7 +16,12 @@ bq = bq_client()
 
 SRCTBL = 'monitor_monthly_raw'   # self-sufficient source (raw daily tables)
 months = [r.ym for r in bq.query(f"SELECT DISTINCT ym FROM `{W}.{SRCTBL}` ORDER BY ym").result()]
-PRI = months[months.index(CUR) - 1]
+if CUR not in months:
+    raise SystemExit(f"[abort] target month {CUR} not found in {W}.{SRCTBL} — run the SQL first (or check freshness)")
+idx = months.index(CUR)
+if idx == 0:
+    raise SystemExit(f"[abort] {CUR} is the earliest month in {W}.{SRCTBL} — no prior month to compare against")
+PRI = months[idx - 1]
 print(f"[plan] {CUR} vs {PRI}")
 
 def load(tbl):

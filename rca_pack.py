@@ -3,16 +3,13 @@ leads (engine split, YoY), impression share (IS / lost-to-rank / lost-to-budget)
 search-volume trend (demand), and change-history actions. Prints a structured brief (JSON) that
 feeds the one-page RCA. Auction insights omitted (table empty). Usage:
   python rca_pack.py --country "United States" --product ADAP"""
-import argparse, json
-import google.auth
-from google.cloud import bigquery
+import argparse, json, os, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from wsm_cfg import PROJ, W, G, CUR, PRI, BASE, YOY, CH_START, CH_END, bq_client
 
-PROJ='it-security-online-marketing'; W=f'{PROJ}.Ads_data_WSM'; G=f'{PROJ}.Google_ads_data_ajay'
-CUR='2026-05'; PRI='2026-04'; BASE=['2026-02','2026-03','2026-04']; YOY='2025-05'
 ap=argparse.ArgumentParser(); ap.add_argument('--country',required=True); ap.add_argument('--product',default=None)
 a=ap.parse_args(); C=a.country; P=a.product
-cred,_=google.auth.default(); cred=cred.with_quota_project(PROJ)
-bq=bigquery.Client(project=PROJ, credentials=cred)
+bq=bq_client()
 def q(s): return list(bq.query(s).result())
 pf=f"AND product='{P}'" if P else ""
 
@@ -40,13 +37,13 @@ for r in q(f"SELECT theme,ym,impr,clicks,cost,ctr,sis,slir FROM `{W}.monitor_mon
 # --- change events by theme (Apr-May 2026) ---
 CH={}
 for r in q(f"""SELECT theme, category, COUNT(*) n, SUM(count) cnt, STRING_AGG(DISTINCT changed_by LIMIT 3) who
-  FROM `{G}.change_events` WHERE country='{C}' {pf} AND date BETWEEN '2026-04-01' AND '2026-05-31'
+  FROM `{G}.change_events` WHERE country='{C}' {pf} AND date BETWEEN '{CH_START}' AND '{CH_END}'
   GROUP BY 1,2"""):
     CH.setdefault(r.theme,[]).append((r.category, r.n, r.who))
 # notable CPC cuts
 CPC={}
 for r in q(f"""SELECT theme, COUNT(*) n, ROUND(AVG(SAFE_DIVIDE(new_cpc-old_cpc,old_cpc))*100,0) avg_pct
-  FROM `{G}.change_events` WHERE country='{C}' {pf} AND category='cpc' AND date BETWEEN '2026-04-01' AND '2026-05-31'
+  FROM `{G}.change_events` WHERE country='{C}' {pf} AND category='cpc' AND date BETWEEN '{CH_START}' AND '{CH_END}'
     AND old_cpc>0 AND new_cpc<old_cpc GROUP BY 1"""):
     CPC[r.theme]=(r.n, r.avg_pct)
 

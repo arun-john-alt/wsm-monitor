@@ -20,7 +20,8 @@ a = ap.parse_args()
 def run_sql(fname):
     sql = open(os.path.join(ROOT, 'sql', fname)).read()
     presales = ", ".join(f"'{c}'" for c in cfg.PRESALES_COUNTRIES)
-    sql = sql.replace('__W__', cfg.W).replace('__G__', cfg.G).replace('__PRESALES__', presales)
+    sql = (sql.replace('__W__', cfg.W).replace('__G__', cfg.G)
+              .replace('__PRESALES__', presales).replace('__ACCT__', cfg.ACCT))
     cfg.bq_client().query(sql).result()
     print(f"[ok] sql/{fname}")
 

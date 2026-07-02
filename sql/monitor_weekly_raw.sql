@@ -4,10 +4,10 @@
 -- Theme map via (campaign, ad_group) -> themes_firstlast_semroi. Placeholders from config.
 CREATE OR REPLACE TABLE `__W__.monitor_weekly_raw` AS
 WITH agmap AS (
-  SELECT ad_group_id, ANY_VALUE(ad_group_name) agn FROM `__G__.ads_AdGroup_5419501619` GROUP BY 1
+  SELECT ad_group_id, ANY_VALUE(ad_group_name) agn FROM `__G__.ads_AdGroup___ACCT__` GROUP BY 1
 ),
 cmap AS (
-  SELECT campaign_id, ANY_VALUE(campaign_name) cn FROM `__G__.ads_Campaign_5419501619` GROUP BY 1
+  SELECT campaign_id, ANY_VALUE(campaign_name) cn FROM `__G__.ads_Campaign___ACCT__` GROUP BY 1
 ),
 tmap AS (
   SELECT LOWER(TRIM(CampaignName)) cn, LOWER(TRIM(AdGroupName)) agn,
@@ -19,13 +19,13 @@ tmap AS (
 perf AS (
   SELECT ad_group_id, campaign_id, DATE_TRUNC(segments_date, WEEK(MONDAY)) wk,
          SUM(metrics_impressions) impr, SUM(metrics_clicks) clicks, SUM(metrics_cost_micros)/1e6 cost
-  FROM `__G__.ads_AdGroupBasicStats_5419501619`
+  FROM `__G__.ads_AdGroupBasicStats___ACCT__`
   WHERE segments_date >= '2025-06-01' AND segments_ad_network_type IN ('SEARCH','SEARCH_PARTNERS')
   GROUP BY 1,2,3
 ),
 search_impr AS (
   SELECT ad_group_id, segments_date, segments_ad_network_type, SUM(metrics_impressions) imp
-  FROM `__G__.ads_AdGroupBasicStats_5419501619`
+  FROM `__G__.ads_AdGroupBasicStats___ACCT__`
   WHERE segments_date >= '2025-06-01' GROUP BY 1,2,3
 ),
 isag AS (
@@ -33,7 +33,7 @@ isag AS (
          SUM(x.metrics_search_impression_share * b.imp)           AS w_sis,
          SUM(x.metrics_search_rank_lost_impression_share * b.imp) AS w_slir,
          SUM(b.imp) AS sw
-  FROM `__G__.ads_AdGroupCrossDeviceStats_5419501619` x
+  FROM `__G__.ads_AdGroupCrossDeviceStats___ACCT__` x
   JOIN search_impr b ON b.ad_group_id=x.ad_group_id AND b.segments_date=x.segments_date
        AND b.segments_ad_network_type=x.segments_ad_network_type
   WHERE x.segments_date >= '2025-06-01' AND x.segments_ad_network_type IN ('SEARCH','SEARCH_PARTNERS')

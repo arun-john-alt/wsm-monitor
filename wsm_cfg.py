@@ -11,6 +11,7 @@ _c = yaml.safe_load(open(os.path.join(ROOT, 'config.yaml')))
 PROJ = _c['bigquery']['project']
 W = f"{PROJ}.{_c['bigquery']['dataset']}"           # write dataset (Ads_data_WSM)
 G = f"{PROJ}.{_c['bigquery']['source_dataset']}"    # read-only source
+ACCT = str(_c['bigquery']['account_id'])            # GA account ID suffix in Data Transfer table names
 
 def bq_client():
     import google.auth

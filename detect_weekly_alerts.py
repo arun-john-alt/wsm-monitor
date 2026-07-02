@@ -8,7 +8,7 @@ Run via: python run_monitor.py --mode weekly   (or standalone)
 """
 import os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from wsm_cfg import W, G, WEEKLY, WEEKLY_DIR, DRI_MAP, dri, bq_client
+from wsm_cfg import W, G, ACCT, WEEKLY, WEEKLY_DIR, DRI_MAP, dri, bq_client
 from datetime import date, timedelta, datetime, timezone
 from collections import defaultdict
 import pandas as pd
@@ -19,7 +19,7 @@ CFGW = WEEKLY
 LOOKBACK = int(CFGW['lookback_weeks'])
 
 # --- resolve target week = latest COMPLETE ISO week in the daily data ---
-maxd = list(bq.query(f"SELECT MAX(segments_date) d FROM `{G}.ads_AdGroupBasicStats_5419501619`").result())[0].d
+maxd = list(bq.query(f"SELECT MAX(segments_date) d FROM `{G}.ads_AdGroupBasicStats_{ACCT}`").result())[0].d
 wk_of_maxd = maxd - timedelta(days=maxd.weekday())          # Monday of max-date's week
 target = wk_of_maxd - timedelta(days=7) if maxd < wk_of_maxd + timedelta(days=6) else wk_of_maxd
 base_weeks = [target - timedelta(days=7*(i+1)) for i in range(LOOKBACK)]
