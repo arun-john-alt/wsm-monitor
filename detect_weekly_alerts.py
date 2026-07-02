@@ -114,7 +114,13 @@ detected = set()
 for a in alerts:
     k = keyof(a); detected.add(k)
     pr = prior.get(k)
-    if pr and pr['status'] in ('new', 'open') and str(pr['last_week']) >= str(target - timedelta(days=7)):
+    if pr and pr['status'] in ('new', 'open') and str(pr['last_week']) == str(target):
+        # same-week re-run: refresh values, do NOT advance state (idempotent)
+        state.append(dict(alert_key=k, **{f: a[f] for f in ('grain','country','product','theme','metric','direction','cur_value','base_value','change','detail')},
+                          first_week=str(pr['first_week']), last_week=str(target),
+                          weeks_open=int(pr['weeks_open']), status=pr['status'], updated_at=now))
+    elif pr and pr['status'] in ('new', 'open') and str(pr['last_week']) == str(target - timedelta(days=7)):
+        # re-detected in a NEW week: escalate
         state.append(dict(alert_key=k, **{f: a[f] for f in ('grain','country','product','theme','metric','direction','cur_value','base_value','change','detail')},
                           first_week=str(pr['first_week']), last_week=str(target),
                           weeks_open=int(pr['weeks_open'])+1, status='open', updated_at=now))
