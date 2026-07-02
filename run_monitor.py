@@ -11,6 +11,7 @@ import wsm_cfg as cfg
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 ap = argparse.ArgumentParser()
+ap.add_argument('--mode', choices=['monthly', 'weekly'], default='monthly')
 ap.add_argument('--skip-sql', action='store_true')
 ap.add_argument('--only', choices=['sql', 'tabs'], default=None)
 a = ap.parse_args()
@@ -29,8 +30,17 @@ def run_py(fname):
     print(f"     ({fname} took {time.time()-t0:.0f}s)")
 
 print("=" * 70)
-print(f"WSM Monitor — target month {cfg.CUR} ({cfg.CUR_LABEL})   write={cfg.W}")
+print(f"WSM Monitor [{a.mode}] — target month {cfg.CUR} ({cfg.CUR_LABEL})   write={cfg.W}")
 print("=" * 70)
+
+if a.mode == 'weekly':
+    if not a.skip_sql:
+        print("\n[1/2] Weekly aggregate")
+        run_sql('monitor_weekly_raw.sql')
+    print("\n[2/2] Detect + digest")
+    run_py('detect_weekly_alerts.py')
+    print("\n=== weekly run complete ===")
+    sys.exit(0)
 
 if a.only != 'tabs' and not a.skip_sql:
     print("\n[1/2] BQ aggregates")

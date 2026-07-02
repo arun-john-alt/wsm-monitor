@@ -15,6 +15,7 @@ paths:
   workbook_src: "/Users/arun-8846/Downloads/Monitor/Continuous Monitoring AKA Big Boss.xlsx"
   workbook_out: "/Users/arun-8846/Downloads/Monitor/Continuous Monitoring AKA Big Boss - Monitor.xlsx"
   rca_dir: "/Users/arun-8846/Downloads/Monitor/RCA"
+  weekly_dir: "/Users/arun-8846/Downloads/Monitor/Weekly"
 
 # Leads metric by market (confirmed 2026-06-30):
 #   presales markets -> FS_PS_Leads (Lead_Type='Mktg(SPL)Leads')
@@ -65,12 +66,21 @@ dri:
   Belgium: Jude
   Singapore: Suganesh
 
-# Weekly alerts (Phase 2): Country×Product anomalies + theme-wise clicks & spend
+# Weekly alerts (Phase 2): Country×Product anomalies + theme-wise clicks & spend.
+# Baseline = trailing 4 complete weeks. Alert on the latest COMPLETE week.
 weekly:
-  enabled: false            # flipped on when Phase 2 lands
-  theme_metrics: [clicks, spend]
-  wow_pct: 30               # vs trailing 4-week average
-  min_weekly_clicks: 50
+  enabled: true
+  lookback_weeks: 4
+  # Country×Product grain — full anomaly set
+  cp_wow_pct: 25            # spend/clicks move vs 4-wk avg to alert
+  cp_min_clicks: 200        # unit floor (avg weekly clicks) to be alertable
+  cp_is_drop_pp: 5          # search-IS drop (pp) to alert
+  cp_ctr_drop_pp: 1.5       # CTR drop (pp) to alert
+  # Theme grain — clicks & spend only (leads too sparse weekly)
+  theme_wow_pct: 40
+  theme_min_clicks: 50
+  theme_min_spend_inr: 50000
+  max_alerts_per_dri: 10    # cap the digest per DRI (worst first)
 
 # Delivery (Phase 3): ONE consolidated monthly email
 email:
