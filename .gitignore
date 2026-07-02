@@ -1,0 +1,16 @@
+# business-data outputs — never commit
+*.xlsx
+*.pdf
+RCA/
+
+# secrets / local
+*.env
+*env.sh
+ZA.txt
+set_env*.ps1
+!set_env.example.ps1
+
+# python
+__pycache__/
+*.pyc
+.DS_Store

@@ -1,0 +1,79 @@
+# WSM Monitor — single config. Edit HERE, not in code.
+# No secrets in this file (BQ auth = gcloud ADC; Zoho/email creds via env vars later).
+
+bigquery:
+  project: it-security-online-marketing
+  dataset: Ads_data_WSM                 # Monitor WRITES only here
+  source_dataset: Google_ads_data_ajay  # READ-ONLY source (Big Boss / Data Transfer)
+
+run:
+  month: "2026-05"          # target month "YYYY-MM", or "auto" = last complete calendar month
+  trend_start: "2025-01"    # first month shown in Trend / Funnel tabs
+  trend_end: auto           # last month shown (auto = month after target, i.e. current partial)
+
+paths:
+  workbook_src: "/Users/arun-8846/Downloads/Monitor/Continuous Monitoring AKA Big Boss.xlsx"
+  workbook_out: "/Users/arun-8846/Downloads/Monitor/Continuous Monitoring AKA Big Boss - Monitor.xlsx"
+  rca_dir: "/Users/arun-8846/Downloads/Monitor/RCA"
+
+# Leads metric by market (confirmed 2026-06-30):
+#   presales markets -> FS_PS_Leads (Lead_Type='Mktg(SPL)Leads')
+#   all others       -> Valid_Sales_Leads_First_Source (Lead_Type='All Leads', single partition)
+presales_countries:
+  - United States
+  - India
+  - United Kingdom
+  - Canada
+  - Australia
+
+# Issue detection (Leads Issues tab): theme flagged when current month runs
+# >= decline_pct below its trailing 3-month avg, with real volume.
+issue_thresholds:
+  decline_pct: 25
+  base_floor: 3        # 3-mo avg must be >= this many leads
+  abs_floor: 2         # absolute drop must be >= this many leads
+  deadband_pct: 10     # YoY color dead-band in Trend/Funnel/Matrix tabs
+comment_gates:         # Comments column: show metric only if it moved this much
+  ctr_pp: 1.5
+  is_pp: 3
+
+# Country -> DRI (drives Leads Issues grouping)
+dri:
+  United States: Aashiq
+  India: Ajay
+  United Kingdom: Ajay
+  Canada: Ajay
+  Australia: Ajay
+  Region - MEA: Indhu
+  Region - APAC: Indhu
+  South Africa: Elanthendral
+  Brazil: Elanthendral
+  Region - LATAM: Elanthendral
+  Mexico: Elanthendral
+  Spain: Elanthendral
+  Israel: Elanthendral
+  Italy: Kowsik
+  Saudi Arabia: Kowsik
+  United Arab Emirates: Kowsik
+  France: Kowsik
+  Turkey: Kowsik
+  Region - Europe: Sathish
+  Poland: Sathish
+  Germany: Jude
+  Netherlands: Jude
+  Switzerland: Jude
+  Belgium: Jude
+  Singapore: Suganesh
+
+# Weekly alerts (Phase 2): Country×Product anomalies + theme-wise clicks & spend
+weekly:
+  enabled: false            # flipped on when Phase 2 lands
+  theme_metrics: [clicks, spend]
+  wow_pct: 30               # vs trailing 4-week average
+  min_weekly_clicks: 50
+
+# Delivery (Phase 3): ONE consolidated monthly email
+email:
+  to: wsm-online-mktg@zohocorp.com
+  cadence: monthly
+  enabled: false

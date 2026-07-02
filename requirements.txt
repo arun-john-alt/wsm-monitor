@@ -1,0 +1,6 @@
+google-cloud-bigquery>=3.30
+pyarrow
+pandas
+openpyxl>=3.1
+reportlab
+pyyaml
