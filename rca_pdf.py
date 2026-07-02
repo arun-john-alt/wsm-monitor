@@ -1,5 +1,5 @@
 """Render a one-page RCA PDF from a content dict. Reusable per unit; sample content = US x ADAP.
-ASCII-only text (INR, ->, pp) to avoid font issues. Output: Downloads/Monitor/RCA/<unit>.pdf"""
+ASCII-only text (INR, ->, pp) to avoid font issues. Output: rca_dir/<unit>.pdf (from config.yaml)"""
 import os
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import inch

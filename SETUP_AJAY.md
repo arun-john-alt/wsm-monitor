@@ -1,7 +1,7 @@
-# WSM Monitor — Setup Guide for Ajay
+# WSM Monitor — Setup Guide
 
-Everything you need to replicate Arun's machine on yours — full monthly reports,
-weekly alerts, email send, and the local dashboard. No secrets in the repo.
+Everything you need to get monthly reports, weekly alerts, email send, and the local
+dashboard running on a new machine. No secrets in the repo.
 
 ---
 
@@ -9,21 +9,20 @@ weekly alerts, email send, and the local dashboard. No secrets in the repo.
 
 | What | Where to get it |
 |---|---|
-| Python 3.9+ | `python3 --version` — comes with macOS or install via Homebrew |
+| Python 3.9+ | `python3 --version` — comes with macOS; install via Homebrew if missing |
 | Google Cloud SDK (`gcloud`) | https://cloud.google.com/sdk/docs/install |
-| Access to BigQuery project `it-security-online-marketing` | Arun can add you; you already have it |
+| Access to BigQuery project `it-security-online-marketing` | You already have it |
 
 ---
 
 ## Step 1 — Clone the repo
 
+The repo is **public** — no account or token needed:
+
 ```bash
 git clone https://github.com/arun-john-alt/wsm-monitor.git
 cd wsm-monitor
 ```
-
-> **Note:** The repo is private. You need to be added as a collaborator first (ask Arun).
-> Alternatively, Arun can add you and you generate an SSH key or use a GitHub PAT.
 
 ---
 
@@ -33,7 +32,7 @@ cd wsm-monitor
 pip3 install -r requirements.txt
 ```
 
-If you're on a shared machine or want isolation:
+Isolated environment (optional but recommended):
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate      # Windows: .venv\Scripts\activate
@@ -42,102 +41,105 @@ pip install -r requirements.txt
 
 ---
 
-## Step 3 — Authenticate to BigQuery (gcloud ADC)
+## Step 3 — Authenticate to BigQuery
 
 ```bash
 gcloud auth application-default login
-# opens a browser — log in with your @zohocorp.com account that has BQ access
+# opens a browser — sign in with your @zohocorp.com account
 
 gcloud auth application-default set-quota-project it-security-online-marketing
 ```
 
-Verify it works:
+Verify:
 ```bash
 python3 wsm_cfg.py
-# Should print: month=2026-05 (May 2026)  prior=2026-04  ...  write=it-security-online-marketing.Ads_data_WSM
-# If you see a credentials error, re-run the gcloud auth steps above.
+# Prints month / path info with no errors. If you see a credentials error, repeat the two gcloud commands above.
 ```
 
 ---
 
-## Step 4 — Place the workbook and set your paths
+## Step 4 — Set the target month + place the workbook
 
-**Get the source workbook** — "Continuous Monitoring AKA Big Boss.xlsx" — from your shared drive
-or copy it from Arun's machine. Put it somewhere convenient, e.g. `~/wsm-data/`.
+**4a. Set the target month** — open `config.yaml` and change `run.month` to the month
+you're reporting on (`YYYY-MM`). Use `"auto"` if you always want last complete calendar month:
 
-```bash
-mkdir -p ~/wsm-data
-# Copy the workbook there — name must match exactly:
-# ~/wsm-data/Continuous Monitoring AKA Big Boss.xlsx
+```yaml
+run:
+  month: "2026-06"   # ← change this to the current reporting month
 ```
 
-**Edit `config.yaml`** — only the `paths:` section needs changing:
+**4b. Place the source workbook** — copy "Continuous Monitoring AKA Big Boss.xlsx" to a
+local folder (e.g. `~/wsm-data/`). The filename must match **exactly**:
+
+```
+~/wsm-data/Continuous Monitoring AKA Big Boss.xlsx
+```
+
+**4c. Update paths in `config.yaml`** — edit only the `paths:` block:
 
 ```yaml
 paths:
-  workbook_src: "~/wsm-data/Continuous Monitoring AKA Big Boss.xlsx"   # ← your local copy
+  workbook_src: "~/wsm-data/Continuous Monitoring AKA Big Boss.xlsx"
   workbook_out: "~/wsm-data/Continuous Monitoring AKA Big Boss - Monitor.xlsx"
   rca_dir:     "~/wsm-data/RCA"
   weekly_dir:  "~/wsm-data/Weekly"
 ```
 
-The output dirs (`RCA/`, `Weekly/`) are created automatically on first run — no action needed.
+The `~` expands to your home directory on both macOS and Windows.
+Output dirs (`RCA/`, `Weekly/`) are created automatically — no action needed.
 
-**Verify paths resolved correctly:**
+**Verify everything:**
 ```bash
 python3 wsm_cfg.py
-# Last line should show the full expanded path to your workbook_out
+# Prints the configured month and the resolved (expanded) workbook paths — check them.
 ```
 
 ---
 
 ## Step 5 — Set SMTP credentials (for email send)
 
-Copy the template:
+**macOS / Linux:**
 ```bash
 cp set_env.example.sh set_env.sh
+# Edit set_env.sh and fill in:
+#   export WSM_SMTP_USER="ajay@zohocorp.com"
+#   export WSM_SMTP_PASS="xxxx-xxxx-xxxx-xxxx"   # Zoho Mail app-password
+source set_env.sh   # load into the current shell before sending
 ```
 
-Edit `set_env.sh` and fill in the Zoho Mail credentials (the same ones used in the
-`theme-report` Cloud Run job, or a new app-password if you prefer):
-
-```bash
-export WSM_SMTP_USER="ajay@zohocorp.com"     # the account that can send-as the alias
-export WSM_SMTP_PASS="xxxx-xxxx-xxxx-xxxx"   # Zoho Mail app-password
+**Windows (PowerShell):**
+```powershell
+$env:WSM_SMTP_USER = "ajay@zohocorp.com"
+$env:WSM_SMTP_PASS = "xxxx-xxxx-xxxx-xxxx"
 ```
 
-Then load them before running the email send:
-```bash
-source set_env.sh
-```
-
-> `set_env.sh` is in `.gitignore` — it will never be committed. Keep it on your machine only.
+`set_env.sh` is in `.gitignore` and will never be committed. Keep it on your machine only.
 
 **How to create a Zoho Mail app-password:**
-1. Log into mail.zoho.in with your account
+1. Sign in to mail.zoho.in
 2. Settings → Security → App Passwords → Generate
-3. Copy the generated password into `set_env.sh`
+3. Copy the password into `set_env.sh` (or PowerShell env)
 
-**Send-as check:** The login in `WSM_SMTP_USER` must have "Send Mail As" rights for
-`wsm-online-mktg@zohocorp.com`. If the email shows your address instead of the alias,
-go to Zoho Mail Settings → Send Mail As → Add address, and verify it.
+**Send-as:** The account in `WSM_SMTP_USER` must have "Send Mail As" rights for
+`wsm-online-mktg@zohocorp.com`. If mail shows your address as From, go to:
+Zoho Mail Settings → Send Mail As → Add address → verify.
 
 ---
 
-## Step 6 — Verify end-to-end (dry run)
+## Step 6 — Full end-to-end dry run
 
 ```bash
-# 1. Check data freshness
+# 1. Confirm source data is fresh
 python3 check_freshness.py monthly
 
-# 2. Run the monthly pipeline (rebuilds BQ aggregates + all Excel tabs)
+# 2. Build BQ aggregates + all workbook tabs
 python3 run_monitor.py
 
 # 3. Generate the email HTML body
 python3 build_email.py
 
-# 4. Preview what would be sent (no actual email)
-source set_env.sh
+# 4. Preview the email (no send)
+source set_env.sh          # Windows: set $env vars in PowerShell first
 python3 send_email.py --dry-run
 
 # 5. Send for real
@@ -146,63 +148,61 @@ python3 send_email.py
 
 ---
 
-## Step 7 — Use the dashboard (recommended)
-
-The dashboard lets you verify data freshness before triggering runs — no command line needed:
+## Step 7 — Use the dashboard (recommended for day-to-day)
 
 ```bash
 python3 ui.py
-# Open http://localhost:8787 in your browser
+# → http://localhost:8787
 ```
 
-**Dashboard buttons:**
-- **Check freshness** — confirms ads & leads data covers the target month before you run
+**Buttons:**
+- **Check freshness** — verifies ads & leads data covers the target month before you run
 - **Run Weekly Alerts** — generates `~/wsm-data/Weekly/weekly_alerts_<week>.txt`
-- **Run Monthly Report** — rebuilds all BigQuery aggregates + all Excel tabs
-- **Month override field** — type `2026-05` to target a specific month (overrides `config.yaml`)
-- **Force toggle** — bypasses freshness FAIL (use when you've manually verified data)
+- **Run Monthly Report** — rebuilds BQ aggregates + all Excel tabs
+- **Month override** — type `2026-06` to target a specific month without editing `config.yaml`
+- **Force** — bypasses freshness FAIL when you've manually confirmed the data is ready
 
-After "Run Monthly Report" finishes:
+After "Run Monthly Report" completes:
 1. Open `~/wsm-data/Continuous Monitoring AKA Big Boss - Monitor.xlsx`
-2. Run `build_email.py` to regenerate the email body with that month's data
-3. Run `send_email.py` (or add a "Send Email" button — see below)
+2. `python3 build_email.py` — generates the HTML email body for that month
+3. `python3 send_email.py` — sends to `wsm-online-mktg@zohocorp.com`
 
 ---
 
 ## What each script does
 
-| Script | What it does |
+| Script | Purpose |
 |---|---|
-| `run_monitor.py` | Main orchestrator. Runs freshness check, fires SQL queries, then all 5 tab builders in order. |
-| `check_freshness.py` | Preflight: ads data covers month-end? leads data fresh? Returns exit 0=OK / 1=FAIL. |
-| `build_monitor_cells.py` | **Runs first** — copies source workbook → output, writes column O signal cells. |
-| `build_leads_trend_tab.py` | "Leads Trend (YoY)" tab — 3 rows/theme (Google/Bing/All) × 18 months. |
-| `build_funnel_tab.py` | "Funnel (L·C·Spend·CPL)" tab — Google-only end-to-end funnel. |
-| `build_leads_issues_tab.py` | "Leads Issues (by DRI)" tab — declining themes, grouped by DRI. |
-| `build_matrix_tab.py` | Two "Country × Product" heatmap tabs (YTD + single-month). |
-| `build_email.py` | Renders email-safe HTML body + saves JSON sidecar (subject/to/path). |
-| `send_email.py` | SMTP send via smtp.zoho.in:465. Reads creds from env vars only. |
-| `detect_weekly_alerts.py` | Weekly anomaly detector — writes digest + updates `wsm_alerts` BQ table. |
-| `rca_pack.py` | Pulls RCA data for one country×product unit from BQ → JSON. |
-| `rca_pdf.py` | Renders a one-page RCA PDF from the JSON. |
-| `ui.py` | Local dashboard at localhost:8787. |
-| `wsm_cfg.py` | Config loader — every script imports constants from here. Run directly to verify setup. |
+| `run_monitor.py` | Orchestrator: freshness check → SQL → all 5 tab builders in order |
+| `check_freshness.py` | Preflight: are ads + leads data current? exit 0 = clear, exit 1 = blocked |
+| `build_monitor_cells.py` | **Must run first** — copies source workbook → output, writes col O signal cells |
+| `build_leads_trend_tab.py` | "Leads Trend (YoY)" — 3 rows/theme (Google/Bing/All) × 18 months |
+| `build_funnel_tab.py` | "Funnel (L·C·Spend·CPL)" — Google end-to-end funnel, metric-aware coloring |
+| `build_leads_issues_tab.py` | "Leads Issues (by DRI)" — declining themes, DRI → Country → Product |
+| `build_matrix_tab.py` | Two Country × Product heatmaps (YTD + single month) |
+| `build_email.py` | Renders email-safe HTML + JSON sidecar; run after the monthly pipeline |
+| `send_email.py` | SMTP send via smtp.zoho.in:465; reads creds from env vars only |
+| `detect_weekly_alerts.py` | Weekly anomaly detector; updates `wsm_alerts` BQ table |
+| `rca_pack.py` | RCA data for one country×product → JSON |
+| `rca_pdf.py` | One-page RCA PDF from the JSON |
+| `ui.py` | Local dashboard at localhost:8787 |
+| `wsm_cfg.py` | Config loader — run directly to verify setup |
 
 ---
 
 ## Changing the target month
 
-Three ways, in priority order:
-1. **Dashboard**: type the month in the "Target month" field before clicking Run.
-2. **Env var**: `WSM_MONTH=2026-06 python3 run_monitor.py` — overrides config without editing.
-3. **config.yaml**: change `run.month: "2026-06"` — the default.
+Three ways (highest priority first):
+1. **Dashboard** — type the month in the "Target month" field before clicking Run
+2. **Env var** — `WSM_MONTH=2026-06 python3 run_monitor.py`
+3. **config.yaml** — `run.month: "2026-06"` (the standing default)
 
 ---
 
 ## Repo layout
 
 ```
-config.yaml              # ALL knobs. Edit this — not the code.
+config.yaml              # ALL knobs — edit this, not the code
 wsm_cfg.py               # config loader + month math + BQ client
 run_monitor.py           # orchestrator
 check_freshness.py       # preflight data quality check
@@ -218,10 +218,10 @@ rca_pack.py              # RCA data assembler
 rca_pdf.py               # RCA PDF renderer
 ui.py                    # local dashboard (localhost:8787)
 requirements.txt         # pip dependencies
-set_env.example.sh       # env var template — copy to set_env.sh and fill in
+set_env.example.sh       # env var template — copy to set_env.sh, fill in, never commit
 sql/
   monitor_monthly_raw.sql   # perf + IS from raw daily tables
-  monitor_leads_monthly.sql # leads (presales/sales + engine split)
+  monitor_leads_monthly.sql # leads with presales/sales + engine split
   monitor_weekly_raw.sql    # weekly ISO-week aggregate
 legacy/                  # superseded scripts — reference only, do not run
 ```
@@ -233,34 +233,31 @@ legacy/                  # superseded scripts — reference only, do not run
 **`google.auth.exceptions.DefaultCredentialsError`**
 → Run `gcloud auth application-default login` and `set-quota-project` again.
 
-**`File not found: .../Continuous Monitoring AKA Big Boss.xlsx`**
-→ The source workbook is missing or path in config.yaml is wrong. Check `python3 wsm_cfg.py` output.
+**`[abort] Tab 'Jun 2026' not found in ...xlsx`**
+→ The output workbook is stale or missing. Run `python3 build_monitor_cells.py` (or the full `run_monitor.py`) first — it copies the source workbook and creates that tab.
 
-**`openpyxl` warnings about rich text**
-→ Safe to ignore if output is correct. All `load_workbook()` calls already use `rich_text=True`.
+**`[abort] target month 2026-06 not found in Ads_data_WSM.monitor_monthly_raw`**
+→ The BQ aggregate hasn't been built for this month yet. Run `python3 run_monitor.py` (not `--skip-sql`).
+
+**`File not found: .../Continuous Monitoring AKA Big Boss.xlsx`**
+→ Source workbook missing or path in `config.yaml` is wrong. Check `python3 wsm_cfg.py` output.
 
 **Email: `SMTPAuthenticationError`**
-→ The app-password in `set_env.sh` is wrong or expired. Generate a new one in Zoho Mail Settings.
+→ App-password wrong or expired. Generate a new one in Zoho Mail Settings → Security → App Passwords.
 
 **Email: From shows your address instead of the alias**
-→ Your login doesn't have send-as rights for `wsm-online-mktg@zohocorp.com`. Add it in Zoho Mail.
+→ Your login lacks send-as rights for `wsm-online-mktg@zohocorp.com`. Add it in Zoho Mail Settings → Send Mail As.
 
-**`BigQuery: Table ... not found`**
-→ The BQ aggregate tables in `Ads_data_WSM` haven't been built yet. Run `python3 run_monitor.py` first
-(this creates them). If it's `Google_ads_data_ajay` tables missing, ping Ajay — Data Transfer may
-have lagged.
-
-**Green triangle warnings in Excel ("number stored as text")**
-→ Already fixed in the codebase. If you see them, ensure you have the latest code (`git pull`).
+**`BigQuery: Table ... not found` on a source table**
+→ If it's in `Google_ads_data_ajay`: Data Transfer may have lagged — check the BQ console.
+   If it's in `Ads_data_WSM`: run `python3 run_monitor.py` to build the aggregates first.
 
 ---
 
-## What to ask Arun / what's still pending
+## What's still pending
 
-- **SMTP creds** — WSM_SMTP_USER + WSM_SMTP_PASS: either reuse from the `theme-report` Cloud Run
-  job, or you mint a new Zoho Mail app-password on the account with send-as rights.
-- **Zoho Sheet write** (col O + tabs) — needs the Big Boss OAuth token (`ZOHO_CLIENT_ID`,
-  `ZOHO_CLIENT_SECRET`, `ZOHO_REFRESH_TOKEN`). Corporate policy blocked self-service OAuth apps.
-  This is Phase 3 / pending.
-- **GitHub collaborator access** — ask Arun to add `your-github-username` to
-  `github.com/arun-john-alt/wsm-monitor` (Settings → Collaborators).
+- **SMTP creds** — `WSM_SMTP_USER` + `WSM_SMTP_PASS`: use the login from the `theme-report`
+  Cloud Run job, or generate a fresh Zoho Mail app-password on an account with send-as rights.
+- **Zoho Sheet write** (col O + tabs written back to the live sheet) — needs the Big Boss OAuth
+  token (`ZOHO_CLIENT_ID`, `ZOHO_CLIENT_SECRET`, `ZOHO_REFRESH_TOKEN`). Corporate policy blocked
+  self-service OAuth apps; pending.
