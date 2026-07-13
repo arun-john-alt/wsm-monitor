@@ -20,6 +20,12 @@ Sibling to "Big Boss" (keyword-rec + change-history columns). Monitor adds a thi
 
 ---
 
+## Data sources reference
+
+Full BQ table inventory, column semantics, ROI logic, and blocked items: **[docs/data_sources.md](docs/data_sources.md)**
+
+---
+
 ## BigQuery layout
 
 | Dataset | Access | Purpose |
